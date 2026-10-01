@@ -121,7 +121,7 @@ class ClasificadorNaiveBayes(Clasificador):
                         self.estadisticas_continuas[col] = {}
                         
                     # Guardamos la media y varianza asociadas a esta clase
-                    self.estadisticas_continua2s[col][clase] = {'media': media, 'varianza': varianza}
+                    self.estadisticas_continuas[col][clase] = {'media': media, 'varianza': varianza}
 
     def clasifica(self, datosTest, atributosDiscretos, diccionario):
             """
@@ -155,18 +155,18 @@ class ClasificadorNaiveBayes(Clasificador):
                             score_clase += np.log(prob)
                             
                         else:
-                            # ES CONTINUO: Evaluamos la función de densidad (PDF) de la Normal
+                            # ES CONTINUO: Evaluamos la función de densidad de la Normal "a mano"
                             media = self.estadisticas_continuas[col][clase]['media']
                             varianza = self.estadisticas_continuas[col][clase]['varianza']
-                            desviacion = np.sqrt(varianza)
                             
-                            # Control de seguridad: Si la desviación es 0 (todos los datos eran idénticos),
-                            # le damos un valor minúsculo para evitar dividir entre cero
-                            if desviacion == 0: 
-                                desviacion = 1e-10
+                            # Control de seguridad: evitar dividir entre cero si la varianza es 0
+                            if varianza == 0: 
+                                varianza = 1e-10
                             
-                            # Calculamos la probabilidad usando scipy.stats.norm
-                            prob = norm.pdf(valor, media, desviacion)
+                            # Fórmula matemática de la PDF de Gauss (¡Muchísimo más rápido que SciPy!)
+                            exponente = np.exp(-((valor - media) ** 2) / (2 * varianza))
+                            prob = (1 / np.sqrt(2 * np.pi * varianza)) * exponente
+                            
                             if prob == 0: 
                                 prob = 1e-10
                                 
