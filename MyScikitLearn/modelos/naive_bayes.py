@@ -18,7 +18,6 @@ class ClasificadorNaiveBayes(Clasificador):
         # 1. Probabilidades a priori
         for clase in self.clases_posibles:
             self.apriori[clase] = np.sum(clases_reales == clase) / total_filas
-            3
         # 2. Entrenamiento por atributos
         for clase in self.clases_posibles:
             datos_clase = datosTrain[clases_reales == clase]

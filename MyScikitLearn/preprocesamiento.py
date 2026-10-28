@@ -38,3 +38,25 @@ class Dataset:
         if columnas is not None:
             datos = datos.iloc[:, columnas]
         return datos.values
+
+    def estandarizarDatos(self, media=True, std=True):
+        """
+        Estandariza los atributos numéricos continuos de los datos.
+        Ignora la última columna (clase).
+        """
+        # Solución al LossySetitemError: Convertir todo a decimales (float) 
+        # antes de intentar sobrescribir con resultados de divisiones
+        self.datos_numericos = self.datos_numericos.astype(float)
+        
+        num_atributos = self.datos_numericos.shape[1] - 1
+        
+        for col in range(num_atributos):
+            columna = self.datos_numericos.iloc[:, col]
+            
+            valor_media = columna.mean() if media else 0
+            valor_std = columna.std() if std else 1
+            
+            if valor_std == 0:
+                valor_std = 1e-10
+                
+            self.datos_numericos.iloc[:, col] = (columna - valor_media) / valor_std
