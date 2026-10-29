@@ -10,6 +10,11 @@ class ClasificadorNaiveBayes(Clasificador):
         self.clases_posibles = []
 
     def entrenamiento(self, datosTrain, atributosDiscretos, diccionario):
+        # Reiniciamos el modelo por si se reentrena con otra partición
+        self.apriori = {}
+        self.probabilidades_discretas = {}
+        self.estadisticas_continuas = {}
+
         clases_reales = datosTrain[:, -1]
         self.clases_posibles = np.unique(clases_reales)
         total_filas = len(datosTrain)

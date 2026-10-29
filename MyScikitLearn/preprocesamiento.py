@@ -3,14 +3,20 @@ import numpy as np
 
 class Dataset:
     def __init__(self, filepath):
-        # Lee 2el fichero original
+        # Lee el fichero original
         self.datos_originales = pd.read_csv(filepath)
-        
+
         self.diccionarios = {}
+        self.nominalAtributos = []
         self.datos_numericos = None
-        
+
         self._construir_diccionarios()
         self._transformar_datos()
+
+    @property
+    def atributosDiscretos(self):
+        # Indica para cada atributo (sin la clase) si es nominal
+        return self.nominalAtributos[:-1]
 
     def _construir_diccionarios(self):
         # Recorre cada atributo para crear el diccionario
@@ -22,6 +28,7 @@ class Dataset:
                 # Si es nominal, se ordenan las claves lexicográficamente y se asigna un entero
                 valores_unicos = sorted(self.datos_originales[columna].dropna().unique())
                 self.diccionarios[columna] = {valor: indice for indice, valor in enumerate(valores_unicos)}
+            self.nominalAtributos.append(bool(self.diccionarios[columna]))
 
     def _transformar_datos(self):
         # Crea la versión numérica usando los diccionarios generados
@@ -41,22 +48,27 @@ class Dataset:
 
     def estandarizarDatos(self, media=True, std=True):
         """
-        Estandariza los atributos numéricos continuos de los datos.
-        Ignora la última columna (clase).
+        Estandariza los atributos numéricos de los datos con el mismo criterio
+        que StandardScaler de Scikit-Learn. Ignora los atributos nominales
+        (codificados con el diccionario) y la última columna (clase).
         """
-        # Solución al LossySetitemError: Convertir todo a decimales (float) 
+        # Solución al LossySetitemError: Convertir todo a decimales (float)
         # antes de intentar sobrescribir con resultados de divisiones
         self.datos_numericos = self.datos_numericos.astype(float)
-        
-        num_atributos = self.datos_numericos.shape[1] - 1
-        
-        for col in range(num_atributos):
-            columna = self.datos_numericos.iloc[:, col]
-            
-            valor_media = columna.mean() if media else 0
-            valor_std = columna.std() if std else 1
-            
+
+        columnas = self.datos_numericos.columns[:-1]
+
+        for columna, es_nominal in zip(columnas, self.atributosDiscretos):
+            if es_nominal:
+                continue
+            valores = self.datos_numericos[columna]
+
+            valor_media = valores.mean() if media else 0.0
+            # ddof=0 (desviación típica poblacional), igual que StandardScaler
+            valor_std = valores.std(ddof=0) if std else 1.0
+
+            # StandardScaler deja sin escalar las columnas constantes
             if valor_std == 0:
-                valor_std = 1e-10
-                
-            self.datos_numericos.iloc[:, col] = (columna - valor_media) / valor_std
+                valor_std = 1.0
+
+            self.datos_numericos[columna] = (valores - valor_media) / valor_std

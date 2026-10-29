@@ -31,17 +31,15 @@ class ClasificadorKNN(Clasificador):
         
         for fila_test in X_test:
             # 1. Calcular la distancia Euclídea de esta fila contra TODAS las filas de entrenamiento
-            # Se usa vectorización de NumPy: np.sqrt(np.sum((Train - test)^2, axis=1))
             distancias = np.sqrt(np.sum((self.datos_entrenamiento - fila_test) ** 2, axis=1))
             
             # 2. Obtener los índices de los K vecinos con menor distancia
-            # np.argsort devuelve las posiciones de los elementos ordenados de menor a mayor
             indices_vecinos = np.argsort(distancias)[:self.k]
             
             # 3. Consultar las clases reales a las que pertenecen esos K vecinos
             clases_vecinos = self.clases_entrenamiento[indices_vecinos]
             
-            # 4. Votación por mayoría: np.unique devuelve las clases y su conteo
+            # 4. Votación por mayoría
             clases_unicas, conteos = np.unique(clases_vecinos, return_counts=True)
             clase_ganadora = clases_unicas[np.argmax(conteos)]
             
